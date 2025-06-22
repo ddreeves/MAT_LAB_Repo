@@ -1,0 +1,71 @@
+# 📁 Directory Structure
+# malware-analysis-lab/
+# ├── yara_rules/
+# │   ├── basic_malware.yar
+# │   └── ransomware.yar
+# ├── sigma_rules/
+# │   ├── suspicious_process_creation.yml
+# │   └── encoded_powershell.yml
+# ├── setup/
+# │   ├── install_remnux.sh
+# │   ├── install_proxmox_config.md
+# │   └── cuckoo_installation_guide.md
+# ├── samples/
+# │   ├── README.md
+# └── README.md
+
+# 📄 yara_rules/basic_malware.yar
+rule Basic_Malware_Example {
+    meta:
+        description = "Detects executable with MZ header and common strings"
+        author = "Your Name"
+    strings:
+        $mz = {4D 5A}
+        $str1 = "malware" ascii nocase
+        $str2 = "ransom" ascii nocase
+    condition:
+        $mz at 0 and any of ($str*)
+}
+
+# 📄 yara_rules/ransomware.yar
+rule Ransomware_Generic_Encryptor {
+    meta:
+        description = "Detects generic ransomware encryption behavior"
+        author = "Your Name"
+    strings:
+        $ext1 = ".locked"
+        $ext2 = ".encrypted"
+        $str1 = "Your files have been encrypted" ascii
+    condition:
+        any of ($ext*) or $str1
+}
+
+# 📄 sigma_rules/suspicious_process_creation.yml
+detection:
+  selection:
+    EventID: 4688
+    NewProcessName|contains:
+      - "powershell"
+      - "cmd.exe"
+      - "wscript.exe"
+  condition: selection
+fields:
+  - CommandLine
+  - ParentProcessName
+logsource:
+  product: windows
+  service: security
+
+# 📄 sigma_rules/encoded_powershell.yml
+detection:
+  selection:
+    CommandLine|contains:
+      - "-enc"
+      - "powershell"
+  condition: selection
+fields:
+  - CommandLine
+  - Image
+logsource:
+  product: windows
+  service: sysmon
